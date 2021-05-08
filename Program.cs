@@ -21,7 +21,7 @@ namespace scraper
         static async System.Threading.Tasks.Task Main(string[] args)
         {
 
-            const string fromUrl = "https://api.coindesk.com/v1/bpi/currentprice.json";
+            const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates";
             string intoUrl = "http://apinaszedocelowe.com.pl/szczecin/szanty/golebabki";
             Walutka data;
 
@@ -37,21 +37,22 @@ namespace scraper
                     Stream webStream = webResponse.GetResponseStream();
                     StreamReader responseReader = new StreamReader(webStream);
                     string response = responseReader.ReadToEnd();
-                    //string list = JsonConvert.DeserializeObject<string>(response);
+                   object obiekt = JsonConvert.DeserializeObject<object>(response);
 
-                   data = JsonConvert.DeserializeObject<Walutka>(response);
+                   //data = JsonConvert.DeserializeObject<Walutka>(response);
                     
-                      Console.WriteLine(data.time);
-                       Console.WriteLine(data.bpi);
+                      //Console.WriteLine(data.time);
+                       //Console.WriteLine(data.bpi);
 
                     responseReader.Close();
                    
                     var client = new HttpClient();
                     var values = new Dictionary<string, string>()
                     {
-                        {"time", data.time.ToString()},
-                        {"bpi", data.bpi.ToString()},
+                        {"", obiekt.ToString()},
+                        //{"bpi", data.bpi.ToString()},
                     };
+                    Console.WriteLine(obiekt.ToString());
                     var content = new FormUrlEncodedContent(values);
                     var responseSend = await client.PostAsync(intoUrl, content);
                     responseSend.EnsureSuccessStatusCode();
