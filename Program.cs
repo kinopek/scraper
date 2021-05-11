@@ -23,10 +23,16 @@ namespace scraper
 
             const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates";
             string intoUrl = "http://apinaszedocelowe.com.pl/szczecin/szanty/golebabki";
-            //Walutka data;
+            bool exists = false;
 
-
-            bool exists = await CheckIfDatabaseExistsAsync(intoUrl);
+            try 
+            { 
+                exists = await CheckIfDatabaseExistsAsync(intoUrl); 
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("----\n" + e.Message);
+            }
 
             while (true)
             {
@@ -48,12 +54,12 @@ namespace scraper
 
                     if (!exists)
                     {
-                        CreateDatabaseAsync(values, intoUrl);
+                        await CreateDatabaseAsync(values, intoUrl);
                         exists = true;
                     }
                     else
                     {
-                        UpdateDatabaseAsync(values, intoUrl);
+                        await UpdateDatabaseAsync(values, intoUrl);
                     }
 
                    
