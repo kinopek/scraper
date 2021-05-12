@@ -9,32 +9,22 @@ using VisioForge.Shared.Newtonsoft.Json;
 
 namespace scraper
 {
-    class Walutka
-    {
-        public Dictionary<string, string> name, unit, value, type;
-        public Walutka(Dictionary<string, string> n, Dictionary<string, string> u, Dictionary<string, string> v, Dictionary<string, string> t)
-        {
-            name = n;
-            unit = u;
-            value = v;
-            type = t;
-        }
-    }
+  
     class Program
     {
         static async System.Threading.Tasks.Task Main(string[] args)
         {
             const string intoUrl = "http://localhost:5000/";
             const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates";
-            const string createCurrencyUrl = intoUrl+ "/Currencies/Create";
-            const string getCurrencyUrl = intoUrl + "/Currencies/Details";
-            const string createValuesUrl = intoUrl + "/Values/Create";
-            const string getAllCurrencies = intoUrl +  "/Currencies";
+            const string createCurrencyUrl = intoUrl+ "Currencies/Create";
+            const string getCurrencyUrl = intoUrl + "Currencies/Details";
+            const string createValuesUrl = intoUrl + "Values/Create";
+            const string getAllCurrenciesUrl = intoUrl +  "Currencies";
             Dictionary<string, string> listOfCurrencyIDs;
 
 
             await CurrenciesTableAsync(fromUrl, createCurrencyUrl, getCurrencyUrl);
-            listOfCurrencyIDs = await GetEveryID(getAllCurrencies);
+            listOfCurrencyIDs = GetEveryID(getAllCurrenciesUrl);
 
 
             while (true)
@@ -44,22 +34,32 @@ namespace scraper
             }
         }
 
-        private static async Task<Dictionary<string, string>> GetEveryID(string getAllCurrenciesUrl)
+        private static Dictionary<string, string> GetEveryID(string getAllCurrenciesUrl)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(getAllCurrenciesUrl);
-            request.ContentType = "application/json";
-            WebResponse webResponse = request.GetResponse();
-            Stream webStream = webResponse.GetResponseStream();
-            StreamReader responseReader = new StreamReader(webStream);
-            string response = responseReader.ReadToEnd();
-            responseReader.Close();
-            SortedList<string, Dictionary<string, string>> currenciesAndValues = StringIntoJson(response); 
             Dictionary<string, string> IDdictionary = new Dictionary<string, string>();
 
-            foreach (Dictionary<string, string> oneCurrencyWithValue in currenciesAndValues.Values)
+            try
             {
-                IDdictionary.Add(oneCurrencyWithValue["name"], oneCurrencyWithValue["currencyID"]);
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(getAllCurrenciesUrl);
+                request.ContentType = "application/json";
+                WebResponse webResponse = request.GetResponse();
+                Stream webStream = webResponse.GetResponseStream();
+                StreamReader responseReader = new StreamReader(webStream);
+                string response = responseReader.ReadToEnd();
+                responseReader.Close();
+                SortedList<string, Dictionary<string, string>> currenciesAndValues = StringIntoJson(response);
+                foreach (Dictionary<string, string> oneCurrencyWithValue in currenciesAndValues.Values)
+                {
+                    IDdictionary.Add(oneCurrencyWithValue["name"], oneCurrencyWithValue["currencyID"]);
+                }
             }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+           
+
             return IDdictionary;
         }
 
@@ -120,14 +120,10 @@ namespace scraper
             }
         }
 
-        private static async Task InsertCurrencyIntoDB(string intoUrl, object v)
+        private static async Task InsertCurrencyIntoDB(string intoUrl, Dictionary<string, string> v)
         {
             var client = new HttpClient();
-            var values = new Dictionary<string, string>()
-                    {
-                        {"", v.ToString()},
-                    };
-            var content = new FormUrlEncodedContent(values);
+            var content = new FormUrlEncodedContent(v);
             var responseSend = await client.PostAsync(intoUrl, content);
             // var responseSend = await client.PutAsync(intoUrl, content);
             responseSend.EnsureSuccessStatusCode();
@@ -142,7 +138,6 @@ namespace scraper
                 foreach (string s in v.Keys)
                 {
                     smallerJson.Add(s, v[s]);
-
                 }
             }
             return smallerJson;
@@ -181,10 +176,7 @@ namespace scraper
             else
             {
                 return false;
-
             }
         }
-
-
     }
 }
