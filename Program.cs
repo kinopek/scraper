@@ -24,12 +24,12 @@ namespace scraper
     {
         static async System.Threading.Tasks.Task Main(string[] args)
         {
-            //const string intoUrl = "http://apinaszedocelowe.com.pl/szczecin/szanty/golebabki";
+            const string intoUrl = "http://localhost:5000/";
             const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates";
-            const string createCurrencyUrl = "/Currencies/Create";
-            const string getCurrencyUrl = "/Currencies/Details";
-            const string createValuesUrl = "/Values/Create";
-            const string getAllCurrencies = "/Currencies";
+            const string createCurrencyUrl = intoUrl+ "/Currencies/Create";
+            const string getCurrencyUrl = intoUrl + "/Currencies/Details";
+            const string createValuesUrl = intoUrl + "/Values/Create";
+            const string getAllCurrencies = intoUrl +  "/Currencies";
             Dictionary<string, string> listOfCurrencyIDs;
 
 
