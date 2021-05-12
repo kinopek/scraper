@@ -29,18 +29,41 @@ namespace scraper
             const string createCurrencyUrl = "/Currencies/Create";
             const string getCurrencyUrl = "/Currencies/Details";
             const string createValuesUrl = "/Values/Create";
+            const string getAllCurrencies = "/Currencies";
+            Dictionary<string, string> listOfCurrencyIDs;
 
 
             await CurrenciesTableAsync(fromUrl, createCurrencyUrl, getCurrencyUrl);
+            listOfCurrencyIDs = await GetEveryID(getAllCurrencies);
+
 
             while (true)
             {
-                await ValuesTableAsync(fromUrl, createValuesUrl);
+                await ValuesTableAsync(fromUrl, createValuesUrl, listOfCurrencyIDs);
                 System.Threading.Thread.Sleep(1000);
             }
         }
 
-        private static async Task ValuesTableAsync(string fromUrl, string createValuesUrl)
+        private static async Task<Dictionary<string, string>> GetEveryID(string getAllCurrenciesUrl)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(getAllCurrenciesUrl);
+            request.ContentType = "application/json";
+            WebResponse webResponse = request.GetResponse();
+            Stream webStream = webResponse.GetResponseStream();
+            StreamReader responseReader = new StreamReader(webStream);
+            string response = responseReader.ReadToEnd();
+            responseReader.Close();
+            SortedList<string, Dictionary<string, string>> currenciesAndValues = StringIntoJson(response); 
+            Dictionary<string, string> IDdictionary = new Dictionary<string, string>();
+
+            foreach (Dictionary<string, string> oneCurrencyWithValue in currenciesAndValues.Values)
+            {
+                IDdictionary.Add(oneCurrencyWithValue["name"], oneCurrencyWithValue["currencyID"]);
+            }
+            return IDdictionary;
+        }
+
+        private static async Task ValuesTableAsync(string fromUrl, string createValuesUrl, Dictionary<string, string> listOfCurrencyIDs)
         {
             try
             {
@@ -54,7 +77,7 @@ namespace scraper
                 {
                     Dictionary<string, string> properFormatInfo = new Dictionary<string, string>()
                         {
-                        {"currencyID", oneCurrencyWithValue["name"]},
+                        {"currencyID", listOfCurrencyIDs["name"]},
                         {"timeStamp", DateTime.Now.ToString()},
                         {"rate", oneCurrencyWithValue["value"]},
                         };
@@ -80,7 +103,7 @@ namespace scraper
                     exists = await CheckIfCurrencyExistsInDB(getCurrencyUrl, currency["name"]);
                     if (!exists)
                     {
-                        
+
                         Dictionary<string, string> properFormatInfo = new Dictionary<string, string>()
                         {
                         {"currencyID", currency["name"]},
@@ -141,7 +164,7 @@ namespace scraper
         {
             var client = new HttpClient();
             var content = new FormUrlEncodedContent(values);
-            var responseSend = await client.PostAsync(intoUrl, content);            
+            var responseSend = await client.PostAsync(intoUrl, content);
             responseSend.EnsureSuccessStatusCode();
         }
 
@@ -162,13 +185,6 @@ namespace scraper
             }
         }
 
-        private static async System.Threading.Tasks.Task CreateDatabaseAsync(Dictionary<string, string> values, string intoUrl)
-        {
-            var client = new HttpClient();
-            var content = new FormUrlEncodedContent(values);
-            var responseSend = await client.PostAsync(intoUrl, content);
-            responseSend.EnsureSuccessStatusCode();
 
-        }
     }
 }
