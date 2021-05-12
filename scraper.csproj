@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.Azure.Amqp" Version="2.4.13" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.13" />
     <PackageReference Include="MySql.Data" Version="8.0.24" />
+    <PackageReference Include="RestSharp" Version="106.11.7" />
     <PackageReference Include="VisioForge.DotNet.Core.TRIAL" Version="14.0.39" />
   </ItemGroup>
 </Project>
