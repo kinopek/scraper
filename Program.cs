@@ -18,7 +18,7 @@ namespace scraper
             const string intoUrl = "http://localhost:50866/";
             const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates/";
             const string createCurrencyUrl = intoUrl+ "Currencies/Create/";
-            const string getCurrencyUrl = intoUrl + "Currencies/GetByName/";
+            const string getCurrencyUrl = intoUrl + "Currencies/Exists/";
             const string createValuesUrl = intoUrl + "Values/Create/";
             const string getAllCurrenciesUrl = intoUrl +  "Currencies/";
             Dictionary<string, string> listOfCurrencyIDs;
@@ -46,12 +46,15 @@ namespace scraper
                 StreamReader responseReader = new StreamReader(webStream);
                 string response = responseReader.ReadToEnd();
                 responseReader.Close();
-                SortedList<string, Dictionary<string, string>> currenciesAndValues = StringIntoJson(response);
-                foreach (Dictionary<string, string> oneCurrencyWithValue in currenciesAndValues.Values)
+                if (response.Length > 0)
                 {
-                    IDdictionary.Add(oneCurrencyWithValue["name"], oneCurrencyWithValue["currencyID"]);
-                }
-                Console.WriteLine("created dictionary of IDs");
+                    SortedList<string, Dictionary<string, string>> currenciesAndValues = StringIntoJson(response);
+                    foreach (Dictionary<string, string> oneCurrencyWithValue in currenciesAndValues.Values)
+                    {
+                        IDdictionary.Add(oneCurrencyWithValue["name"], oneCurrencyWithValue["currencyID"]);
+                    }
+                    Console.WriteLine("created dictionary of IDs");
+                }  
             }
             catch(Exception e)
             {
@@ -160,17 +163,28 @@ namespace scraper
 
         private static async System.Threading.Tasks.Task<bool> CheckIfCurrencyExistsInDB(string getCurrencyUrl, string currencyName)
         {
-            var client = new HttpClient();
-            var responseSend = await client.GetAsync(getCurrencyUrl + currencyName);
-           // responseSend.EnsureSuccessStatusCode();
-            if (responseSend.IsSuccessStatusCode)
+            //  var client = new HttpClient();
+            // HttpResponseMessage response = await client.GetAsync(getCurrencyUrl + currencyName);
+            string html = string.Empty;
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(getCurrencyUrl + currencyName);
+            request.AutomaticDecompression = DecompressionMethods.GZip;
+            using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+            using (Stream stream = response.GetResponseStream())
+            using (StreamReader reader = new StreamReader(stream))
             {
-                return true;
+                html = reader.ReadToEnd();
             }
-            else
-            {
-                return false;
-            }
+           // Console.WriteLine(html);
+                if(html == "true")//response.Content == "true")
+                {
+                  //  Console.WriteLine(response.Content);
+                    return true;
+
+                }
+                else
+                {
+                    return false;
+                }
         }
     }
 }
