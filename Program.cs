@@ -18,7 +18,7 @@ namespace scraper
             const string intoUrl = "http://localhost:50866/";
             const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates/";
             const string createCurrencyUrl = intoUrl+ "Currencies/Create/";
-            const string getCurrencyUrl = intoUrl + "Currencies/Details/";
+            const string getCurrencyUrl = intoUrl + "Currencies/GetByName/";
             const string createValuesUrl = intoUrl + "Values/Create/";
             const string getAllCurrenciesUrl = intoUrl +  "Currencies/";
             Dictionary<string, string> listOfCurrencyIDs;
@@ -75,12 +75,11 @@ namespace scraper
                         {
                         {"currencyID", listOfCurrencyIDs[oneCurrencyWithValue["name"]]},
                         {"timeStamp", DateTime.Now.ToString()},
-                        {"rate", oneCurrencyWithValue["value"]},
+                        {"rate", oneCurrencyWithValue["value"]}
                         };
                     await UpdateCurrencyValues(properFormatInfo, createValuesUrl);
                 }
                 Console.WriteLine("sent the current currency prices into the database");
-
             }
             catch (Exception e)
             {
@@ -101,12 +100,10 @@ namespace scraper
                     exists = await CheckIfCurrencyExistsInDB(getCurrencyUrl, currency["name"]);
                     if (!exists)
                     {
-
                         Dictionary<string, string> properFormatInfo = new Dictionary<string, string>()
                         {
-                        //{"currencyID", listOfCurrencyIDs["name"]},
                         {"name", currency["name"]},
-                        {"symbol", currency["unit"]},
+                        {"symbol", currency["unit"]}
                         };
                         await InsertCurrencyIntoDB(createCurrencyUrl, properFormatInfo);
                         Console.WriteLine("sent the currency name into the database");
@@ -165,8 +162,8 @@ namespace scraper
         {
             var client = new HttpClient();
             var responseSend = await client.GetAsync(getCurrencyUrl + currencyName);
-            responseSend.EnsureSuccessStatusCode();
-            if (responseSend != null)
+           // responseSend.EnsureSuccessStatusCode();
+            if (responseSend.IsSuccessStatusCode)
             {
                 return true;
             }
