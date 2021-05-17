@@ -14,23 +14,23 @@ namespace scraper
     {
         static async System.Threading.Tasks.Task Main(string[] args)
         {
+            const int minutesToWait = 1;
             const string intoUrl = "http://localhost:50866/";
-            const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates";
-            const string createCurrencyUrl = intoUrl+ "Currencies/Create";
-            const string getCurrencyUrl = intoUrl + "Currencies/Details";
-            const string createValuesUrl = intoUrl + "Values/Create";
-            const string getAllCurrenciesUrl = intoUrl +  "Currencies";
+            const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates/";
+            const string createCurrencyUrl = intoUrl+ "Currencies/Create/";
+            const string getCurrencyUrl = intoUrl + "Currencies/Details/";
+            const string createValuesUrl = intoUrl + "Values/Create/";
+            const string getAllCurrenciesUrl = intoUrl +  "Currencies/";
             Dictionary<string, string> listOfCurrencyIDs;
+
 
 
             await CurrenciesTableAsync(fromUrl, createCurrencyUrl, getCurrencyUrl);
             listOfCurrencyIDs = GetEveryID(getAllCurrenciesUrl);
-
-
             while (true)
             {
                 await ValuesTableAsync(fromUrl, createValuesUrl, listOfCurrencyIDs);
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(minutesToWait*1000*60);
             }
         }
 
@@ -51,9 +51,11 @@ namespace scraper
                 {
                     IDdictionary.Add(oneCurrencyWithValue["name"], oneCurrencyWithValue["currencyID"]);
                 }
+                Console.WriteLine("created dictionary of IDs");
             }
             catch(Exception e)
             {
+                Console.WriteLine("-----------------");
                 Console.WriteLine(e.Message);
             }
             return IDdictionary;
@@ -63,11 +65,9 @@ namespace scraper
         {
             try
             {
-
                 string response = ScrapFromCoinGecko(fromUrl);
                 SortedList<string, Dictionary<string, string>> currenciesAndValues = StringIntoJson(response);
                 Console.WriteLine(currenciesAndValues.ToString());
-
 
                 foreach (Dictionary<string, string> oneCurrencyWithValue in currenciesAndValues.Values)
                 {
@@ -79,6 +79,8 @@ namespace scraper
                         };
                     await UpdateCurrencyValues(properFormatInfo, createValuesUrl);
                 }
+                Console.WriteLine("sent the current currency prices into the database");
+
             }
             catch (Exception e)
             {
@@ -107,6 +109,7 @@ namespace scraper
                         {"symbol", currency["unit"]},
                         };
                         await InsertCurrencyIntoDB(createCurrencyUrl, properFormatInfo);
+                        Console.WriteLine("sent the currency name into the database");
                     }
                 }
             }
@@ -121,7 +124,6 @@ namespace scraper
             var client = new HttpClient();
             var content = new FormUrlEncodedContent(v);
             var responseSend = await client.PostAsync(intoUrl, content);
-            // var responseSend = await client.PutAsync(intoUrl, content);
             responseSend.EnsureSuccessStatusCode();
         }
 
@@ -164,7 +166,6 @@ namespace scraper
             var client = new HttpClient();
             var responseSend = await client.GetAsync(getCurrencyUrl + currencyName);
             responseSend.EnsureSuccessStatusCode();
-
             if (responseSend != null)
             {
                 return true;
