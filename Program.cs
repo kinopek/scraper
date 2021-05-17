@@ -106,7 +106,7 @@ namespace scraper
 
                         Dictionary<string, string> properFormatInfo = new Dictionary<string, string>()
                         {
-                        {"currencyID", currency["name"]},
+                        //{"currencyID", listOfCurrencyIDs["name"]},
                         {"name", currency["name"]},
                         {"symbol", currency["unit"]},
                         };
