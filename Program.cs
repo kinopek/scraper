@@ -14,7 +14,7 @@ namespace scraper
     {
         static async System.Threading.Tasks.Task Main(string[] args)
         {
-            const string intoUrl = "http://localhost:5000/";
+            const string intoUrl = "http://localhost:50866/";
             const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates";
             const string createCurrencyUrl = intoUrl+ "Currencies/Create";
             const string getCurrencyUrl = intoUrl + "Currencies/Details";
@@ -37,7 +37,6 @@ namespace scraper
         private static Dictionary<string, string> GetEveryID(string getAllCurrenciesUrl)
         {
             Dictionary<string, string> IDdictionary = new Dictionary<string, string>();
-
             try
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(getAllCurrenciesUrl);
@@ -57,9 +56,6 @@ namespace scraper
             {
                 Console.WriteLine(e.Message);
             }
-
-           
-
             return IDdictionary;
         }
 
@@ -77,7 +73,7 @@ namespace scraper
                 {
                     Dictionary<string, string> properFormatInfo = new Dictionary<string, string>()
                         {
-                        {"currencyID", listOfCurrencyIDs["name"]},
+                        {"currencyID", listOfCurrencyIDs[oneCurrencyWithValue["name"]]},
                         {"timeStamp", DateTime.Now.ToString()},
                         {"rate", oneCurrencyWithValue["value"]},
                         };
