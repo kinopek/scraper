@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 using VisioForge.Shared.Newtonsoft.Json;
 
 namespace scraper
-{
-  
+{ 
     class Program
     {
         static async System.Threading.Tasks.Task Main(string[] args)
@@ -18,18 +17,17 @@ namespace scraper
             const string intoUrl = "http://localhost:50866/";
             const string fromUrl = "https://api.coingecko.com/api/v3/exchange_rates/";
             const string createCurrencyUrl = intoUrl+ "Currencies/Create/";
-            const string getCurrencyUrl = intoUrl + "Currencies/Exists/";
+            const string getCurrencyUrl = intoUrl + "Currencies/GetID/";
             const string createValuesUrl = intoUrl + "Values/Create/";
             const string getAllCurrenciesUrl = intoUrl +  "Currencies/";
             Dictionary<string, string> listOfCurrencyIDs;
-
 
 
             await CurrenciesTableAsync(fromUrl, createCurrencyUrl, getCurrencyUrl);
             listOfCurrencyIDs = GetEveryID(getAllCurrenciesUrl);
             while (true)
             {
-                await ValuesTableAsync(fromUrl, createValuesUrl, listOfCurrencyIDs);
+                ValuesTable(fromUrl, createValuesUrl, listOfCurrencyIDs);
                 System.Threading.Thread.Sleep(minutesToWait*1000*60);
             }
         }
@@ -48,10 +46,17 @@ namespace scraper
                 responseReader.Close();
                 if (response.Length > 0)
                 {
-                    SortedList<string, Dictionary<string, string>> currenciesAndValues = StringIntoJson(response);
-                    foreach (Dictionary<string, string> oneCurrencyWithValue in currenciesAndValues.Values)
+                    List<Dictionary<string, string>> currenciesAndValues = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(response);
+                    foreach (Dictionary<string, string> oneCurrencyWithValue in currenciesAndValues)
                     {
-                        IDdictionary.Add(oneCurrencyWithValue["name"], oneCurrencyWithValue["currencyID"]);
+                        try
+                        {
+                            IDdictionary.Add(oneCurrencyWithValue["name"], oneCurrencyWithValue["currencyID"]);
+                        }
+                        catch (Exception e)
+                        {
+                        //    Console.WriteLine(e.Message +" OMMITING");
+                        }
                     }
                     Console.WriteLine("created dictionary of IDs");
                 }  
@@ -64,13 +69,13 @@ namespace scraper
             return IDdictionary;
         }
 
-        private static async Task ValuesTableAsync(string fromUrl, string createValuesUrl, Dictionary<string, string> listOfCurrencyIDs)
+        private static void ValuesTable(string fromUrl, string createValuesUrl, Dictionary<string, string> listOfCurrencyIDs)
         {
             try
             {
                 string response = ScrapFromCoinGecko(fromUrl);
                 SortedList<string, Dictionary<string, string>> currenciesAndValues = StringIntoJson(response);
-                Console.WriteLine(currenciesAndValues.ToString());
+           //     Console.WriteLine(currenciesAndValues.ToString());
 
                 foreach (Dictionary<string, string> oneCurrencyWithValue in currenciesAndValues.Values)
                 {
@@ -80,7 +85,7 @@ namespace scraper
                         {"timeStamp", DateTime.Now.ToString()},
                         {"rate", oneCurrencyWithValue["value"]}
                         };
-                    await UpdateCurrencyValues(properFormatInfo, createValuesUrl);
+                    UpdateCurrencyValues(properFormatInfo, createValuesUrl);
                 }
                 Console.WriteLine("sent the current currency prices into the database");
             }
@@ -108,7 +113,7 @@ namespace scraper
                         {"name", currency["name"]},
                         {"symbol", currency["unit"]}
                         };
-                        await InsertCurrencyIntoDB(createCurrencyUrl, properFormatInfo);
+                        InsertCurrencyIntoDB(createCurrencyUrl, properFormatInfo);
                         Console.WriteLine("sent the currency name into the database");
                     }
                 }
@@ -119,12 +124,23 @@ namespace scraper
             }
         }
 
-        private static async Task InsertCurrencyIntoDB(string intoUrl, Dictionary<string, string> v)
+        private static void InsertCurrencyIntoDB(string intoUrl, Dictionary<string, string> v)
         {
-            var client = new HttpClient();
-            var content = new FormUrlEncodedContent(v);
-            var responseSend = await client.PostAsync(intoUrl, content);
-            responseSend.EnsureSuccessStatusCode();
+            string json = JsonConvert.SerializeObject(v);
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(intoUrl);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "POST";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                streamWriter.Write(json);
+            }
+
+            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            {
+                var result = streamReader.ReadToEnd();
+            }
         }
 
         private static SortedList<string, Dictionary<string, string>> StringIntoJson(string response)
@@ -153,12 +169,23 @@ namespace scraper
             return response;
         }
 
-        private static async System.Threading.Tasks.Task UpdateCurrencyValues(Dictionary<string, string> values, string intoUrl)
+        private static void UpdateCurrencyValues(Dictionary<string, string> values, string intoUrl)
         {
-            var client = new HttpClient();
-            var content = new FormUrlEncodedContent(values);
-            var responseSend = await client.PostAsync(intoUrl, content);
-            responseSend.EnsureSuccessStatusCode();
+            string json = JsonConvert.SerializeObject(values);
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(intoUrl);
+            httpWebRequest.ContentType = "application/json";
+            httpWebRequest.Method = "POST";
+
+            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            {
+                streamWriter.Write(json);
+            }
+
+            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            {
+                var result = streamReader.ReadToEnd();
+            }
         }
 
         private static async System.Threading.Tasks.Task<bool> CheckIfCurrencyExistsInDB(string getCurrencyUrl, string currencyName)
@@ -175,7 +202,7 @@ namespace scraper
                 html = reader.ReadToEnd();
             }
            // Console.WriteLine(html);
-                if(html == "true")//response.Content == "true")
+                if(html.Length>0)//response.Content == "true")
                 {
                   //  Console.WriteLine(response.Content);
                     return true;
