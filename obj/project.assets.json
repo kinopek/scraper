@@ -173,6 +173,17 @@
           "lib/netstandard2.1/Zstandard.Net.dll": {}
         }
       },
+      "prometheus-net/4.1.1": {
+        "type": "package",
+        "compile": {
+          "lib/netcoreapp2.1/Prometheus.NetCore.dll": {},
+          "lib/netcoreapp2.1/Prometheus.NetStandard.dll": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.1/Prometheus.NetCore.dll": {},
+          "lib/netcoreapp2.1/Prometheus.NetStandard.dll": {}
+        }
+      },
       "RestSharp/106.11.7": {
         "type": "package",
         "compile": {
@@ -1467,6 +1478,33 @@
         "lib/netstandard2.1/Zstandard.Net.dll",
         "mysql.data.8.0.24.nupkg.sha512",
         "mysql.data.nuspec"
+      ]
+    },
+    "prometheus-net/4.1.1": {
+      "sha512": "A+z2qxPv+tJOl78yUaQEzyDMap0sjjKL+WVUa+JzXyRQ1ZPtNeDf6qXD+w7tYkVd88GQtnoJ7xDaxluiOM6S8Q==",
+      "type": "package",
+      "path": "prometheus-net/4.1.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "images/prometheus-net-logo.png",
+        "lib/net461/Prometheus.NetStandard.dll",
+        "lib/net461/Prometheus.NetStandard.pdb",
+        "lib/net461/Prometheus.NetStandard.xml",
+        "lib/netcoreapp2.1/Prometheus.NetCore.deps.json",
+        "lib/netcoreapp2.1/Prometheus.NetCore.dll",
+        "lib/netcoreapp2.1/Prometheus.NetCore.pdb",
+        "lib/netcoreapp2.1/Prometheus.NetCore.xml",
+        "lib/netcoreapp2.1/Prometheus.NetStandard.deps.json",
+        "lib/netcoreapp2.1/Prometheus.NetStandard.dll",
+        "lib/netcoreapp2.1/Prometheus.NetStandard.pdb",
+        "lib/netcoreapp2.1/Prometheus.NetStandard.xml",
+        "lib/netstandard2.0/Prometheus.NetStandard.deps.json",
+        "lib/netstandard2.0/Prometheus.NetStandard.dll",
+        "lib/netstandard2.0/Prometheus.NetStandard.pdb",
+        "lib/netstandard2.0/Prometheus.NetStandard.xml",
+        "prometheus-net.4.1.1.nupkg.sha512",
+        "prometheus-net.nuspec"
       ]
     },
     "RestSharp/106.11.7": {
@@ -4284,7 +4322,8 @@
       "Microsoft.VisualStudio.Azure.Containers.Tools.Targets >= 1.10.13",
       "MySql.Data >= 8.0.24",
       "RestSharp >= 106.11.7",
-      "VisioForge.DotNet.Core.TRIAL >= 14.0.39"
+      "VisioForge.DotNet.Core.TRIAL >= 14.0.39",
+      "prometheus-net >= 4.1.1"
     ]
   },
   "packageFolders": {
@@ -4354,6 +4393,10 @@
           "VisioForge.DotNet.Core.TRIAL": {
             "target": "Package",
             "version": "[14.0.39, )"
+          },
+          "prometheus-net": {
+            "target": "Package",
+            "version": "[4.1.1, )"
           }
         },
         "imports": [

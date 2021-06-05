@@ -67,6 +67,10 @@
             "VisioForge.DotNet.Core.TRIAL": {
               "target": "Package",
               "version": "[14.0.39, )"
+            },
+            "prometheus-net": {
+              "target": "Package",
+              "version": "[4.1.1, )"
             }
           },
           "imports": [

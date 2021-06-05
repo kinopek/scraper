@@ -52,3 +52,5 @@ C:\Users\user\source\repos\scraper\obj\Debug\netcoreapp3.1\scraper.dll
 C:\Users\user\source\repos\scraper\obj\Debug\netcoreapp3.1\scraper.pdb
 C:\Users\user\source\repos\scraper\obj\Debug\netcoreapp3.1\scraper.genruntimeconfig.cache
 C:\Users\user\source\repos\scraper\bin\Debug\netcoreapp3.1\RestSharp.dll
+C:\Users\user\source\repos\scraper\bin\Debug\netcoreapp3.1\Prometheus.NetCore.dll
+C:\Users\user\source\repos\scraper\bin\Debug\netcoreapp3.1\Prometheus.NetStandard.dll

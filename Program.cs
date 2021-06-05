@@ -6,11 +6,18 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using VisioForge.Shared.Newtonsoft.Json;
+using Prometheus;
+
 
 namespace scraper
 {
     class Program
     {
+        static Counter prom_ok = Metrics.CreateCounter("prom_ok", "This fields indicates thetransactions that were processed correctly.");
+        //static Counter prom_warning = Metrics.CreateCounter("prom_warning", "This fields indicates the warning count.");
+        static Counter prom_exception = Metrics.CreateCounter("prom_exception", "This fields indicates the exception count.");
+
+
         static void Main(string[] args)
         {
             const int minutesToWait = 1;
@@ -22,6 +29,10 @@ namespace scraper
             const string getAllCurrenciesUrl = intoUrl + "Currencies/";
             Dictionary<string, string> listOfCurrencyIDs;
 
+            // app.UseMetricServer(5000, "/prometheus");  // starts exporter on port 5000 and endpoint /prometheus
+
+            SetupRequirements();
+
 
             CurrenciesTable(fromUrl, createCurrencyUrl, getCurrencyUrl);
             listOfCurrencyIDs = GetEveryID(getAllCurrenciesUrl);
@@ -30,6 +41,15 @@ namespace scraper
                 ValuesTable(fromUrl, createValuesUrl, listOfCurrencyIDs);
                 System.Threading.Thread.Sleep(minutesToWait * 1000 * 60);
             }
+        }
+
+        private static void SetupRequirements()
+        {
+            //var metricServer = new MetricServer(1234);
+           // metricServer.Start();//exception no access
+
+            var server = new MetricServer(hostname: "localhost", port: 1234);
+            server.Start();
         }
 
         private static Dictionary<string, string> GetEveryID(string getAllCurrenciesUrl)
@@ -50,15 +70,19 @@ namespace scraper
                         catch (Exception e)
                         {
                             //    Console.WriteLine(e.Message +" OMMITING");
+                            prom_exception.Inc(1);
                         }
                     }
                     Console.WriteLine("created dictionary of IDs");
+                    prom_ok.Inc(1);
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("-----------------");
                 Console.WriteLine(e.Message);
+                prom_exception.Inc(1);
+
             }
             return IDdictionary;
         }
@@ -82,19 +106,28 @@ namespace scraper
                         {"rate", oneCurrencyWithValue["value"]}
                         };
                         InsertIntoDB(createValuesUrl, properFormatInfo);
+                        prom_ok.Inc(1);
+
+
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine("-------During " + oneCurrencyWithValue["name"]);
                         Console.WriteLine(e.Message);
+                        prom_exception.Inc(1);
+
                     }
                 }
                 Console.WriteLine("sent the current currency prices into the database");
+                prom_ok.Inc(1);
+
             }
             catch (Exception e)
             {
                 Console.WriteLine("-----------------");
                 Console.WriteLine(e.Message);
+                prom_exception.Inc(1);
+
             }
         }
 
@@ -122,12 +155,18 @@ namespace scraper
                         };
                             InsertIntoDB(createCurrencyUrl, properFormatInfo);
                             Console.WriteLine("sent " + currency["name"] + " into the database");
+                            prom_ok.Inc(1);
+
+
 
                         }
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine("----\n" + e.Message);
+                        prom_exception.Inc(1);
+
+
                     }
                 }
                 Console.WriteLine("Now all the currencies should be in the database");
@@ -136,6 +175,8 @@ namespace scraper
             catch (Exception e)
             {
                 Console.WriteLine("----\n" + e.Message);
+                prom_exception.Inc(1);
+
             }
         }
 
@@ -194,7 +235,9 @@ namespace scraper
             }
             catch (Exception e)
             {
+                prom_exception.Inc(1);
                 return false;
+
             }
         }
 
