@@ -13,10 +13,18 @@ namespace scraper
 {
     class Program
     {
-        static Counter prom_ok = Metrics.CreateCounter("prom_ok", "This fields indicates thetransactions that were processed correctly.");
-        //static Counter prom_warning = Metrics.CreateCounter("prom_warning", "This fields indicates the warning count.");
-        static Counter prom_exception = Metrics.CreateCounter("prom_exception", "This fields indicates the exception count.");
+        private static Counter createDictionary_exception = Metrics.CreateCounter("createDictionary_exception", "During creating the dictionary by asking the database, there were some problems.");
+        private static Counter rateIntoDB_exception = Metrics.CreateCounter("rateIntoDB_exception", "During sending a rate of a currency into the database, there were some problems.");
+        private static Counter allRatesIntoDB_exception = Metrics.CreateCounter("allRatesIntoDB_exception", "During sending rates of all currencies into the database, there were some problems.");
+        private static Counter currencyIntoDB_exception = Metrics.CreateCounter("currencyIntoDB_exception", "During sending a currency into databse, something went wrong");
+        private static Counter allCurrenciesIntoDB_exception = Metrics.CreateCounter("allCurrenciesIntoDB_exception", "During sending all currencies into the database, there were some problems.");
+        private static Counter currencyExistance_exception = Metrics.CreateCounter("currencyExistance_exception", "During checking the existance of some currency in the database, something went wrong");
 
+        private static Counter createDictionary_ok = Metrics.CreateCounter("createDictionary_ok", "Creating the dictionary, by asking the database, completed successfully.");
+        private static Counter rateIntoDB_ok = Metrics.CreateCounter("rateIntoDB_ok", "Successfully sent a rate of a currency into the database.");
+        private static Counter allRatesIntoDB_ok = Metrics.CreateCounter("allRatesIntoDB_ok", "All current rates have been sent into the database.");
+        private static Counter currencyIntoDB_ok = Metrics.CreateCounter("currencyIntoDB_ok", "Successfully sent a currency into the database.");
+        private static Counter allCurrenciesIntoDB_ok = Metrics.CreateCounter("allCurrenciesIntoDB_ok", "All currencies shouold now be in the database.");
 
         static void Main(string[] args)
         {
@@ -29,10 +37,7 @@ namespace scraper
             const string getAllCurrenciesUrl = intoUrl + "Currencies/";
             Dictionary<string, string> listOfCurrencyIDs;
 
-            // app.UseMetricServer(5000, "/prometheus");  // starts exporter on port 5000 and endpoint /prometheus
-
             SetupRequirements();
-
 
             CurrenciesTable(fromUrl, createCurrencyUrl, getCurrencyUrl);
             listOfCurrencyIDs = GetEveryID(getAllCurrenciesUrl);
@@ -46,8 +51,7 @@ namespace scraper
         private static void SetupRequirements()
         {
             //var metricServer = new MetricServer(1234);
-           // metricServer.Start();//exception no access
-
+            // metricServer.Start();//exception no access
             var server = new MetricServer(hostname: "localhost", port: 1234);
             server.Start();
         }
@@ -70,19 +74,19 @@ namespace scraper
                         catch (Exception e)
                         {
                             //    Console.WriteLine(e.Message +" OMMITING");
-                            prom_exception.Inc(1);
+                            createDictionary_exception.Inc(1);
                         }
                     }
                     Console.WriteLine("created dictionary of IDs");
-                    prom_ok.Inc(1);
+                    createDictionary_ok.Inc(1);
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("-----------------");
                 Console.WriteLine(e.Message);
-                prom_exception.Inc(1);
-
+                createDictionary_exception.Inc(1);
+                IDdictionary = GetEveryID(getAllCurrenciesUrl);
             }
             return IDdictionary;
         }
@@ -106,7 +110,7 @@ namespace scraper
                         {"rate", oneCurrencyWithValue["value"]}
                         };
                         InsertIntoDB(createValuesUrl, properFormatInfo);
-                        prom_ok.Inc(1);
+                        rateIntoDB_ok.Inc(1);
 
 
                     }
@@ -114,19 +118,19 @@ namespace scraper
                     {
                         Console.WriteLine("-------During " + oneCurrencyWithValue["name"]);
                         Console.WriteLine(e.Message);
-                        prom_exception.Inc(1);
+                        rateIntoDB_exception.Inc(1);
 
                     }
                 }
                 Console.WriteLine("sent the current currency prices into the database");
-                prom_ok.Inc(1);
+                allRatesIntoDB_ok.Inc(1);
 
             }
             catch (Exception e)
             {
                 Console.WriteLine("-----------------");
                 Console.WriteLine(e.Message);
-                prom_exception.Inc(1);
+                allRatesIntoDB_exception.Inc(1);
 
             }
         }
@@ -155,7 +159,7 @@ namespace scraper
                         };
                             InsertIntoDB(createCurrencyUrl, properFormatInfo);
                             Console.WriteLine("sent " + currency["name"] + " into the database");
-                            prom_ok.Inc(1);
+                            currencyIntoDB_ok.Inc(1);
 
 
 
@@ -164,18 +168,19 @@ namespace scraper
                     catch (Exception e)
                     {
                         Console.WriteLine("----\n" + e.Message);
-                        prom_exception.Inc(1);
+                        currencyIntoDB_exception.Inc(1);
 
 
                     }
                 }
                 Console.WriteLine("Now all the currencies should be in the database");
+                allCurrenciesIntoDB_ok.Inc(1);
 
             }
             catch (Exception e)
             {
                 Console.WriteLine("----\n" + e.Message);
-                prom_exception.Inc(1);
+                allCurrenciesIntoDB_exception.Inc(1);
 
             }
         }
@@ -235,7 +240,7 @@ namespace scraper
             }
             catch (Exception e)
             {
-                prom_exception.Inc(1);
+                currencyExistance_exception.Inc(1);
                 return false;
 
             }
